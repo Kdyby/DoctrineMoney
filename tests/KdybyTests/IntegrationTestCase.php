@@ -33,7 +33,7 @@ abstract class IntegrationTestCase extends Tester\TestCase
 		$config->addParameters(array('appDir' => $rootDir, 'wwwDir' => $rootDir));
 		$config->addConfig(__DIR__ . '/nette-reset.neon');
 		if ($model) {
-			$config->addConfig(__DIR__ . '/Money/config/' . $model . '.neon', $config::NONE);
+			$config->addConfig(__DIR__ . '/DoctrineMoney/config/' . $model . '.neon', $config::NONE);
 			require_once __DIR__ . '/DoctrineMoney/models/' . $model . '.php';
 		}
 		Kdyby\DoctrineMoney\DI\MoneyExtension::register($config);
