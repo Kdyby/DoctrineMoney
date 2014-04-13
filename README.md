@@ -1,15 +1,17 @@
-Kdyby/Money [![Build Status](https://secure.travis-ci.org/Kdyby/Money.png?branch=master)](http://travis-ci.org/Kdyby/Money)
+Kdyby/DoctrineMoney [![Build Status](https://secure.travis-ci.org/Kdyby/DoctrineMoney.png?branch=master)](http://travis-ci.org/Kdyby/DoctrineMoney)
 ===========================
 
 
 Requirements
 ------------
 
-Kdyby/Money requires PHP 5.3.2 or higher.
+Kdyby/DoctrineMoney requires PHP 5.3.2 or higher.
 
+- [Kdyby/Money](https://github.com/kdyby/money)
+- [Kdyby/Doctrine](https://github.com/kdyby/doctrine)
 - [Nette Framework 2.0.x](https://github.com/nette/nette)
 
 
 -----
 
-Homepage [http://www.kdyby.org](http://www.kdyby.org) and repository [http://github.com/kdyby/money](http://github.com/kdyby/money).
+Homepage [http://www.kdyby.org](http://www.kdyby.org) and repository [http://github.com/Kdyby/DoctrineMoney](http://github.com/Kdyby/DoctrineMoney).
