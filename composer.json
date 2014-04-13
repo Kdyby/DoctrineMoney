@@ -1,5 +1,5 @@
 {
-	"name": "kdyby/money",
+	"name": "kdyby/doctrine-money",
 	"type": "library",
 	"description": "Currency manipulation and transformation for Nette Framework",
 	"keywords": ["nette", "kdyby", "money", "currency"],
@@ -18,7 +18,7 @@
 	],
 	"support": {
 		"email": "filip@prochazka.su",
-		"issues": "https://github.com/kdyby/money/issues"
+		"issues": "https://github.com/kdyby/doctrinemoney/issues"
 	},
 	"require": {
 		"nette/nette": "2.1.*@dev",
@@ -32,12 +32,8 @@
 	},
 	"autoload": {
 		"psr-0": {
-			"Kdyby\\Money\\": "src/"
-		},
-		"classmap": [
-			"src/Kdyby/Money/exceptions.php",
-			"src/Kdyby/Money/compatibility.php"
-		]
+			"Kdyby\\DoctrineMoney\\": "src/"
+		}
 	},
 	"autoload-dev": {
 		"classmap": [

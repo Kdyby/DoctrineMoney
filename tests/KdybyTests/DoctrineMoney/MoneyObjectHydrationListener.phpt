@@ -1,25 +1,27 @@
 <?php
 
 /**
- * Test: Kdyby\Money\MoneyObjectHydrationListener.
+ * Test: Kdyby\DoctrineMoney\MoneyObjectHydrationListener.
  *
- * @testCase KdybyTests\Money\MoneyObjectHydrationListenerTest
+ * @testCase KdybyTests\DoctrineMoney\MoneyObjectHydrationListenerTest
  * @author Filip Procházka <filip@prochazka.su>
- * @package Kdyby\Money
+ * @package Kdyby\DoctrineMoney
  */
 
-namespace KdybyTests\Money;
+namespace KdybyTests\DoctrineMoney;
 
 use Doctrine\ORM\Event\LifecycleEventArgs;
-use Kdyby\Doctrine\Events;
 use Doctrine\ORM\Tools\SchemaTool;
-use Kdyby;
 use Kdyby\Money\Currency;
 use Kdyby\Money\Money;
 use Kdyby\Money\NullCurrency;
+use Kdyby;
+use Kdyby\Doctrine\Events;
 use Nette;
-use Tester;
 use Tester\Assert;
+use Tester;
+
+
 
 require_once __DIR__ . '/../bootstrap.php';
 
@@ -45,7 +47,7 @@ class MoneyObjectHydrationListenerTest extends \KdybyTests\IntegrationTestCase
 
 		// assert that listener was binded to entity
 		Assert::same(array(
-			Events::postLoadRelations => array(array('class' => 'Kdyby\\Money\\Mapping\\MoneyObjectHydrationListener', 'method' => Events::postLoadRelations)),
+			Events::postLoadRelations => array(array('class' => 'Kdyby\\DoctrineMoney\\Mapping\\MoneyObjectHydrationListener', 'method' => Events::postLoadRelations)),
 		), $class->entityListeners);
 
 		// generate schema
@@ -82,8 +84,8 @@ class MoneyObjectHydrationListenerTest extends \KdybyTests\IntegrationTestCase
 		$container = $this->createContainer('order');
 		/** @var Kdyby\Doctrine\EntityManager $em */
 		$em = $container->getByType('Kdyby\Doctrine\EntityManager');
-		/** @var Kdyby\Money\Mapping\MoneyObjectHydrationListener $listener */
-		$listener = $container->getByType('Kdyby\Money\Mapping\MoneyObjectHydrationListener');
+		/** @var \Kdyby\DoctrineMoney\Mapping\MoneyObjectHydrationListener $listener */
+		$listener = $container->getByType('Kdyby\DoctrineMoney\Mapping\MoneyObjectHydrationListener');
 
 		$listener->postLoadRelations($entity, new LifecycleEventArgs($entity, $em));
 
@@ -128,7 +130,7 @@ class MoneyObjectHydrationListenerTest extends \KdybyTests\IntegrationTestCase
 
 		/** @var OrderEntity $order */
 		$order = $em->find(OrderEntity::getClassName(), 1);
-		Assert::equal(new Kdyby\Money\Money(1000, $currencies->findOneBy(array('code' => 'CZK'))), $order->getMoney());
+		Assert::equal(new Kdyby\Money\Money(1000, $currencies->find('CZK')), $order->getMoney());
 
 		// following loading should not fail
 		$order2 = $em->createQueryBuilder("o")

@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the file license.txt that was distributed with this source code.
  */
 
-namespace Kdyby\Money\DI;
+namespace Kdyby\DoctrineMoney\DI;
 
 use Kdyby;
 use Kdyby\Events\DI\EventsExtension;
@@ -43,7 +43,7 @@ class MoneyExtension extends Nette\DI\CompilerExtension implements Kdyby\Doctrin
 		$builder = $this->getContainerBuilder();
 
 		$builder->addDefinition($this->prefix('moneyHydrationListener'))
-			->setClass('Kdyby\Money\Mapping\MoneyObjectHydrationListener', array(
+			->setClass('Kdyby\DoctrineMoney\Mapping\MoneyObjectHydrationListener', array(
 				Kdyby\DoctrineCache\DI\Helpers::processCache($this, $config['cache'], 'money'),
 			))
 			->addTag(EventsExtension::SUBSCRIBER_TAG);
@@ -83,7 +83,7 @@ class MoneyExtension extends Nette\DI\CompilerExtension implements Kdyby\Doctrin
 	public function getDatabaseTypes()
 	{
 		return array(
-			Kdyby\Money\Types\Money::MONEY => 'Kdyby\Money\Types\Money',
+			Kdyby\DoctrineMoney\Types\Money::MONEY => 'Kdyby\DoctrineMoney\Types\Money',
 			Kdyby\Money\Types\Amount::AMOUNT => 'Kdyby\Money\Types\Amount', // @deprecated
 			Kdyby\Money\Types\Currency::CURRENCY => 'Kdyby\Money\Types\Currency', // @deprecated
 		);

@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the file license.txt that was distributed with this source code.
  */
 
-namespace Kdyby\Money\Mapping;
+namespace Kdyby\DoctrineMoney\Mapping;
 
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\Cache\CacheProvider;
@@ -62,7 +62,11 @@ class MoneyObjectHydrationListener extends Nette\Object implements Kdyby\Events\
 	public function getSubscribedEvents()
 	{
 		return array(
-			Events::loadClassMetadata
+			Events::loadClassMetadata,
+
+			// todo: always force currency from money object to currencyAssoc that is referenced in metadata
+			// todo: when more that one money object is referring to same currencyAssoc, than all of them mus have same currency
+			// Events::preFlush,
 		);
 	}
 
@@ -142,7 +146,7 @@ class MoneyObjectHydrationListener extends Nette\Object implements Kdyby\Events\
 
 		foreach ($class->getFieldNames() as $fieldName) {
 			$mapping = $class->getFieldMapping($fieldName);
-			if ($mapping['type'] !== Kdyby\Money\Types\Money::MONEY) {
+			if ($mapping['type'] !== Kdyby\DoctrineMoney\Types\Money::MONEY) {
 				continue;
 			}
 

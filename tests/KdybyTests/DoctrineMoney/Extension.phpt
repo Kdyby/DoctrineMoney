@@ -8,13 +8,13 @@
  * @package Kdyby\Money
  */
 
-namespace KdybyTests\Money;
+namespace KdybyTests\DoctrineMoney;
 
 use Doctrine\DBAL\Types\Type;
 use Kdyby;
 use Nette;
-use Tester\Assert;
 use Tester;
+use Tester\Assert;
 
 
 
@@ -33,7 +33,7 @@ class ExtensionTest extends \KdybyTests\IntegrationTestCase
 		$container = $this->createContainer();
 		$container->getByType('Kdyby\Doctrine\Connection'); // initializes the types
 
-		Assert::true(Type::getType('money') instanceof Kdyby\Money\Types\Money);
+		Assert::true(Type::getType('money') instanceof Kdyby\DoctrineMoney\Types\Money);
 	}
 
 }
