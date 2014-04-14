@@ -19,6 +19,8 @@ use Doctrine\ORM\Event\PreFlushEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kdyby;
+use Kdyby\DoctrineMoney\CurrenciesConflictException;
+use Kdyby\Money\Currency;
 use Kdyby\Money\MetadataException;
 use Kdyby\Money\Money;
 use Kdyby\Money\NullCurrency;
@@ -80,19 +82,22 @@ class MoneyObjectHydrationListener extends Nette\Object implements Kdyby\Events\
 			return;
 		}
 
-		/** @var ClassMetadata[]|string[] $mapping */
-		foreach ($fieldsMap as $moneyField => $mapping) {
-			$amount = $mapping['moneyFieldClass']->getFieldValue($entity, $moneyField);
-			if ($amount instanceof Money || $amount === NULL) {
-				continue;
-			}
+		/** @var ClassMetadata[]|array[] $currencyMeta */
+		/** @var ClassMetadata $moneyClass */
+		foreach ($fieldsMap as $currencyAssoc => $currencyMeta) {
+			foreach ($currencyMeta['fields'] as $moneyField => $moneyClass) {
+				$amount = $moneyClass->getFieldValue($entity, $moneyField);
+				if ($amount instanceof Money || $amount === NULL) {
+					continue;
+				}
 
-			$currency = $mapping['currencyClass']->getFieldValue($entity, $mapping['currencyAssociation']);
-			if (!$currency instanceof Kdyby\Money\Currency) {
-				$currency = new NullCurrency();
-			}
+				$currency = $currencyMeta['class']->getFieldValue($entity, $currencyAssoc);
+				if (!$currency instanceof Currency) {
+					$currency = new NullCurrency();
+				}
 
-			$mapping['moneyFieldClass']->setFieldValue($entity, $moneyField, Money::from($amount, $currency));
+				$moneyClass->setFieldValue($entity, $moneyField, Money::from($amount, $currency));
+			}
 		}
 	}
 
@@ -108,13 +113,58 @@ class MoneyObjectHydrationListener extends Nette\Object implements Kdyby\Events\
 			return;
 		}
 
-		/** @var ClassMetadata[]|string[] $mapping */
-		foreach ($fieldsMap as $moneyField => $mapping) {
-			$amount = $mapping['moneyFieldClass']->getFieldValue($entity, $moneyField);
-			if ($amount === NULL) {
-				continue;
+		/** @var ClassMetadata[]|array[] $currencyMeta */
+		/** @var ClassMetadata $moneyClass */
+		foreach ($fieldsMap as $currencyAssoc => $currencyMeta) {
+			$fieldCurrencies = array();
+			$currency = $currencyMeta['class']->getFieldValue($entity, $currencyAssoc);
+
+			foreach ($currencyMeta['fields'] as $moneyField => $moneyClass) {
+				$amount = $moneyClass->getFieldValue($entity, $moneyField);
+				if ($amount === NULL) {
+					continue;
+				}
+
+				if (!$amount instanceof Money) {
+					// if amount is scalar and the assoc has currency then the amount should be converted to money object
+					if ($currency instanceof Currency) {
+						$moneyClass->setFieldValue($entity, $moneyField, Money::from($amount, $currency));
+					}
+
+					// let's save the currency for later validation
+					$fieldCurrencies[$currency->getCode()][] = $moneyField;
+					continue;
+				}
+
+				if ($currency instanceof Currency && $amount->getCurrency() !== $currency) {
+					if (count($currencyMeta['fields']) === 1) {
+						// the currency of money object has changed
+						// the currency assoc must be updated to reflect it
+						$currencyMeta['class']->setFieldValue($entity, $currencyAssoc, $amount->getCurrency());
+
+						// there is only one money field, so no further validation is necessary
+						continue 2;
+					}
+				}
+
+				$fieldCurrencies[$amount->getCurrency()->getCode()][] = $moneyField;
 			}
 
+			if (count($fieldCurrencies) > 1) {
+				$conflicts = array();
+				foreach ($fieldCurrencies as $code => $fields) {
+					if ($currency instanceof Currency && $code === $currency->getCode()) {
+						continue;
+					}
+
+					$conflicts[] = "[" . implode(', ', $fields) . "] have currency $code";
+				}
+
+				throw new CurrenciesConflictException(
+					'The following fields ' . implode(' and fields ', $conflicts) . ', ' .
+					"but the relation $currencyAssoc of given entity expects them to have currency $currency."
+				);
+			}
 		}
 	}
 
@@ -174,14 +224,23 @@ class MoneyObjectHydrationListener extends Nette\Object implements Kdyby\Events\
 			$this->cache->save($class->getName(), $moneyFields ? Json::encode($moneyFields) : FALSE);
 		}
 
+		$fieldsMap = array();
 		if (is_array($moneyFields) && !empty($moneyFields)) {
-			foreach ($moneyFields as &$mapping) {
-				$mapping['moneyFieldClass'] = $this->entityManager->getClassMetadata($mapping['moneyFieldClass']);
-				$mapping['currencyClass'] = $this->entityManager->getClassMetadata($mapping['currencyClass']);
+			foreach ($moneyFields as $moneyField => $mapping) {
+				if (!isset($fieldsMap[$mapping['currencyAssociation']])) {
+					$fieldsMap[$mapping['currencyAssociation']] = array(
+						'class' => $this->entityManager->getClassMetadata($mapping['currencyClass']),
+						'fields' => array($moneyField => $this->entityManager->getClassMetadata($mapping['moneyFieldClass'])),
+					);
+
+					continue;
+				}
+
+				$fieldsMap[$mapping['currencyAssociation']]['fields'][$moneyField] = $this->entityManager->getClassMetadata($mapping['moneyFieldClass']);
 			}
 		}
 
-		return $this->moneyFieldsCache[$class->getName()] = $moneyFields;
+		return $this->moneyFieldsCache[$class->getName()] = $fieldsMap;
 	}
 
 
