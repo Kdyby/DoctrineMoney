@@ -17,6 +17,7 @@ use Kdyby\Money\Money;
 use Kdyby\Money\NullCurrency;
 use Kdyby;
 use Kdyby\Doctrine\Events;
+use KdybyTests\IntegrationTestCase;
 use Nette;
 use Tester\Assert;
 use Tester;
@@ -30,37 +31,58 @@ require_once __DIR__ . '/../bootstrap.php';
 /**
  * @author Filip Procházka <filip@prochazka.su>
  */
-class MoneyObjectHydrationListenerTest extends \KdybyTests\IntegrationTestCase
+class MoneyObjectHydrationListenerTest extends IntegrationTestCase
 {
+
+	/**
+	 * @var \Nette\DI\Container|\SystemContainer
+	 */
+	private $container;
+
+	/**
+	 * @var \Kdyby\Doctrine\EntityManager
+	 */
+	private $em;
+
+	/**
+	 * @var \Kdyby\DoctrineMoney\Mapping\MoneyObjectHydrationListener
+	 */
+	private $listener;
+
+
+
+	protected function setUp()
+	{
+		parent::setUp();
+
+		$this->container = $this->createContainer('order');
+
+		$this->em = $this->container->getByType('Kdyby\Doctrine\EntityManager');
+		$this->listener = $this->container->getByType('Kdyby\DoctrineMoney\Mapping\MoneyObjectHydrationListener');
+	}
+
+
 
 	/**
 	 * @dataProvider dataEntityClasses
 	 */
 	public function testFunctional($className)
 	{
-		$container = $this->createContainer('order');
-
-		/** @var Kdyby\Doctrine\EntityManager $em */
-		$em = $container->getByType('Kdyby\Doctrine\EntityManager');
-
-		$class = $em->getClassMetadata($className);
+		$class = $this->em->getClassMetadata($className);
 
 		// assert that listener was binded to entity
 		Assert::same(array(
 			Events::postLoadRelations => array(array('class' => 'Kdyby\\DoctrineMoney\\Mapping\\MoneyObjectHydrationListener', 'method' => Events::postLoadRelations)),
 		), $class->entityListeners);
 
-		// generate schema
-		$schema = new SchemaTool($em);
-		$schema->createSchema($em->getMetadataFactory()->getAllMetadata());
+		$this->generateDbSchema();
+		$currencies = $this->em->getRepository(Kdyby\Money\Currency::getClassName());
 
 		// test money hydration
-		$em->persist(new $className(1000, 'CZK'))->flush()->clear();
-
-		$currencies = $em->getRepository(Kdyby\Money\Currency::getClassName());
+		$this->em->persist(new $className(1000, 'CZK'))->flush()->clear();
 
 		/** @var OrderEntity $order */
-		$order = $em->find($className, 1);
+		$order = $this->em->find($className, 1);
 		Assert::equal(new Kdyby\Money\Money(1000, $currencies->find('CZK')), $order->getMoney());
 	}
 
@@ -81,14 +103,7 @@ class MoneyObjectHydrationListenerTest extends \KdybyTests\IntegrationTestCase
 	 */
 	public function testNullCurrencyHydration($expectedMoney, OrderEntity $entity)
 	{
-		$container = $this->createContainer('order');
-		/** @var Kdyby\Doctrine\EntityManager $em */
-		$em = $container->getByType('Kdyby\Doctrine\EntityManager');
-		/** @var \Kdyby\DoctrineMoney\Mapping\MoneyObjectHydrationListener $listener */
-		$listener = $container->getByType('Kdyby\DoctrineMoney\Mapping\MoneyObjectHydrationListener');
-
-		$listener->postLoadRelations($entity, new LifecycleEventArgs($entity, $em));
-
+		$this->listener->postLoadRelations($entity, new LifecycleEventArgs($entity, $this->em));
 		Assert::equal($expectedMoney, $entity->getMoney());
 	}
 
@@ -112,33 +127,31 @@ class MoneyObjectHydrationListenerTest extends \KdybyTests\IntegrationTestCase
 
 	public function testRepeatedLoading()
 	{
-		$container = $this->createContainer('order');
-		/** @var Kdyby\Doctrine\EntityManager $em */
-		$em = $container->getByType('Kdyby\Doctrine\EntityManager');
-		$class = $em->getClassMetadata(OrderEntity::getClassName());
-
-		// generate schema
-		$schema = new SchemaTool($em);
-		$schema->createSchema($em->getMetadataFactory()->getAllMetadata());
+		$this->generateDbSchema();
+		$currencies = $this->em->getRepository(Kdyby\Money\Currency::getClassName());
 
 		// test money hydration
-		$em->persist(new OrderEntity(1000, 'CZK'));
-		$em->flush();
-		$em->clear();
-
-		$currencies = $em->getRepository(Kdyby\Money\Currency::getClassName());
+		$this->em->persist(new OrderEntity(1000, 'CZK'))->flush()->clear();
 
 		/** @var OrderEntity $order */
-		$order = $em->find(OrderEntity::getClassName(), 1);
+		$order = $this->em->find(OrderEntity::getClassName(), 1);
 		Assert::equal(new Kdyby\Money\Money(1000, $currencies->find('CZK')), $order->getMoney());
 
 		// following loading should not fail
-		$order2 = $em->createQueryBuilder("o")
+		$order2 = $this->em->createQueryBuilder("o")
 			->select("o")
 			->from(OrderEntity::getClassName(), "o")
 			->where("o.id = :id")->setParameter("id", 1)
 			->getQuery()->getSingleResult();
 		Assert::same($order, $order2);
+	}
+
+
+
+	private function generateDbSchema()
+	{
+		$schema = new SchemaTool($this->em);
+		$schema->createSchema($this->em->getMetadataFactory()->getAllMetadata());
 	}
 
 }
