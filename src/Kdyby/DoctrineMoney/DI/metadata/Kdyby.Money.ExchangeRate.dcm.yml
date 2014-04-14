@@ -1,0 +1,28 @@
+Kdyby\Money\ExchangeRate:
+  type: entity
+  table: currency_exchange_rates
+  readOnly: false
+  id:
+    id:
+      type: integer
+      generator:
+        strategy: AUTO
+  fields:
+    since:
+      type: datetime
+      nullable: true
+    till:
+      type: datetime
+      nullable: true
+  manyToOne:
+    sell:
+      targetEntity: Currency
+      inversedBy: rates
+      cascade: ["persist", "merge"]
+      joinColumn:
+        nullable: false
+    buy:
+      targetEntity: Currency
+      cascade: ["persist", "merge"]
+      joinColumn:
+        nullable: false

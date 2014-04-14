@@ -98,9 +98,8 @@ class MoneyExtension extends Nette\DI\CompilerExtension implements Kdyby\Doctrin
 	 */
 	public function getEntityMappings()
 	{
-		$moneyRefl = new \ReflectionClass('Kdyby\Money\Money');
 		return array(
-			'Kdyby\Money' => dirname($moneyRefl->getFileName()),
+			'Kdyby\Money' => (object) array('value' => 'yaml', 'attributes' => __DIR__ . '/metadata'),
 		);
 	}
 

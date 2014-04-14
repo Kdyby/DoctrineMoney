@@ -1,0 +1,28 @@
+Kdyby\Money\Currency:
+  type: entity
+  table: currencies
+  readOnly: false
+  id:
+    code:
+      type: string
+      length: 15
+  fields:
+    number:
+      type: string
+      length: 5
+      options:
+        fixed: true
+    name:
+      type: string
+      length: 100
+    subunitsInUnit:
+      type: integer
+      column: subunits_in_unit
+      length: 3
+    countries:
+      type: json_array
+  oneToMany:
+    rates:
+      targetEntity: ExchangeRate
+      mappedBy: sell
+      cascade: ["persist", "merge"]

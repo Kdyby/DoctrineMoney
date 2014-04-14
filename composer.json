@@ -23,7 +23,8 @@
 	"require": {
 		"nette/nette": "2.1.*@dev",
 		"kdyby/doctrine": "~1.1@dev",
-		"kdyby/money": "@dev"
+		"kdyby/money": "@dev",
+		"symfony/yaml": "~2.4"
 	},
 	"require-dev": {
 		"nette/tester": "@dev",
