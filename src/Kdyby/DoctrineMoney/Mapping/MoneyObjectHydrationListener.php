@@ -15,6 +15,7 @@ use Doctrine\Common\Cache\CacheProvider;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
+use Doctrine\ORM\Event\PreFlushEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kdyby;
@@ -47,6 +48,11 @@ class MoneyObjectHydrationListener extends Nette\Object implements Kdyby\Events\
 	 */
 	private $annotationReader;
 
+	/**
+	 * @var array
+	 */
+	private $moneyFieldsCache = array();
+
 
 
 	public function __construct(CacheProvider $cache, Reader $annotationReader, EntityManager $entityManager)
@@ -63,10 +69,6 @@ class MoneyObjectHydrationListener extends Nette\Object implements Kdyby\Events\
 	{
 		return array(
 			Events::loadClassMetadata,
-
-			// todo: always force currency from money object to currencyAssoc that is referenced in metadata
-			// todo: when more that one money object is referring to same currencyAssoc, than all of them mus have same currency
-			// Events::preFlush,
 		);
 	}
 
@@ -78,21 +80,41 @@ class MoneyObjectHydrationListener extends Nette\Object implements Kdyby\Events\
 			return;
 		}
 
+		/** @var ClassMetadata[]|string[] $mapping */
 		foreach ($fieldsMap as $moneyField => $mapping) {
-			$moneyFieldClass = $this->entityManager->getClassMetadata($mapping['moneyFieldClass']);
-			$amount = $moneyFieldClass->getFieldValue($entity, $moneyField);
-
+			$amount = $mapping['moneyFieldClass']->getFieldValue($entity, $moneyField);
 			if ($amount instanceof Money || $amount === NULL) {
 				continue;
 			}
 
-			$currencyAssocClass = $this->entityManager->getClassMetadata($mapping['currencyClass']);
-			$currency = $currencyAssocClass->getFieldValue($entity, $mapping['currencyAssociation']);
+			$currency = $mapping['currencyClass']->getFieldValue($entity, $mapping['currencyAssociation']);
 			if (!$currency instanceof Kdyby\Money\Currency) {
 				$currency = new NullCurrency();
 			}
 
-			$moneyFieldClass->setFieldValue($entity, $moneyField, Money::from($amount, $currency));
+			$mapping['moneyFieldClass']->setFieldValue($entity, $moneyField, Money::from($amount, $currency));
+		}
+	}
+
+
+
+	/**
+	 * @todo: always force currency from money object to currencyAssoc that is referenced in metadata
+	 * @todo: when more that one money object is referring to same currencyAssoc, than all of them mus have same currency
+	 */
+	public function preFlush($entity, PreFlushEventArgs $args)
+	{
+		if (!$fieldsMap = $this->getEntityMoneyFields($entity)) {
+			return;
+		}
+
+		/** @var ClassMetadata[]|string[] $mapping */
+		foreach ($fieldsMap as $moneyField => $mapping) {
+			$amount = $mapping['moneyFieldClass']->getFieldValue($entity, $moneyField);
+			if ($amount === NULL) {
+				continue;
+			}
+
 		}
 	}
 
@@ -121,15 +143,17 @@ class MoneyObjectHydrationListener extends Nette\Object implements Kdyby\Events\
 			$class->setAssociationOverride($assocName, $mapping);
 		}
 
-		if (!$this->getEntityMoneyFields($class->newInstance(), $class)) {
+		if (!$this->buildMoneyFields($class)) {
 			return;
 		}
 
-		if ($this->hasRegisteredListener($class, Kdyby\Doctrine\Events::postLoadRelations, get_called_class())) {
-			return;
+		if (!$this->hasRegisteredListener($class, Kdyby\Doctrine\Events::postLoadRelations, get_called_class())) {
+			$class->addEntityListener(Kdyby\Doctrine\Events::postLoadRelations, get_called_class(), Kdyby\Doctrine\Events::postLoadRelations);
 		}
 
-		$class->addEntityListener(Kdyby\Doctrine\Events::postLoadRelations, get_called_class(), Kdyby\Doctrine\Events::postLoadRelations);
+		if (!$this->hasRegisteredListener($class, Events::preFlush, get_called_class())) {
+			$class->addEntityListener(Events::preFlush, get_called_class(), Events::preFlush);
+		}
 	}
 
 
@@ -138,10 +162,32 @@ class MoneyObjectHydrationListener extends Nette\Object implements Kdyby\Events\
 	{
 		$class = $class ?: $this->entityManager->getClassMetadata(get_class($entity));
 
-		if ($this->cache->contains($class->getName())) {
-			return Json::decode($this->cache->fetch($class->getName()), Json::FORCE_ARRAY);
+		if (isset($this->moneyFieldsCache[$class->name])) {
+			return $this->moneyFieldsCache[$class->name];
 		}
 
+		if ($this->cache->contains($class->getName())) {
+			$moneyFields = Json::decode($this->cache->fetch($class->getName()), Json::FORCE_ARRAY);
+
+		} else {
+			$moneyFields = $this->buildMoneyFields($class);
+			$this->cache->save($class->getName(), $moneyFields ? Json::encode($moneyFields) : FALSE);
+		}
+
+		if (is_array($moneyFields) && !empty($moneyFields)) {
+			foreach ($moneyFields as &$mapping) {
+				$mapping['moneyFieldClass'] = $this->entityManager->getClassMetadata($mapping['moneyFieldClass']);
+				$mapping['currencyClass'] = $this->entityManager->getClassMetadata($mapping['currencyClass']);
+			}
+		}
+
+		return $this->moneyFieldsCache[$class->getName()] = $moneyFields;
+	}
+
+
+
+	private function buildMoneyFields(ClassMetadata $class)
+	{
 		$moneyFields = array();
 
 		foreach ($class->getFieldNames() as $fieldName) {
@@ -174,8 +220,6 @@ class MoneyObjectHydrationListener extends Nette\Object implements Kdyby\Events\
 				'currencyAssociation' => $currencyAssoc,
 			);
 		}
-
-		$this->cache->save($class->getName(), $moneyFields ? Json::encode($moneyFields) : FALSE);
 
 		return $moneyFields;
 	}
