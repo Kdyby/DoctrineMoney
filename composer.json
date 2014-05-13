@@ -23,13 +23,13 @@
 	"require": {
 		"nette/nette": "~2.1@dev",
 
-		"kdyby/doctrine": "~1.1@dev",
+		"kdyby/doctrine": "~2.0@dev",
 		"kdyby/money": "@dev",
 		"symfony/yaml": "~2.4"
 	},
 	"require-dev": {
 		"kdyby/events": "@dev",
-		"kdyby/console": "@dev",
+		"kdyby/console": "~2.2@dev",
 		"nette/tester": "@dev",
 		"jakub-onderka/php-parallel-lint": "~0.6"
 	},
