@@ -1,8 +1,16 @@
 #!/usr/bin/sh php
 <?php
 
+use Tracy\Debugger;
+
+
 require __DIR__ . '/../vendor/autoload.php';
-Nette\Diagnostics\Debugger::enable(FALSE);
+
+if (!class_exists('Tracy\Debugger')) {
+	class_alias('Nette\Diagnostics\Debugger', 'Tracy\Debugger');
+}
+
+Tracy\Debugger::enable(FALSE);
 
 set_error_handler(function ($severenity, $message) {
 	throw new RuntimeException($message);
@@ -36,7 +44,7 @@ foreach ($xml->CcyTbl->children() as $entry) {
 			'name' => (string) $entry->CcyNm,
 			'number' => (string)  $entry->CcyNbr,
 			'subunits_in_unit' => pow(10, (int) $entry->CcyMnrUnts),
-			'countries' => [ (string) $entry->CtryNm ],
+			'countries' => array((string) $entry->CtryNm),
 		);
 
 	} else {
