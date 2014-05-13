@@ -48,9 +48,10 @@
 		"symfony/yaml": "~2.4"
 	},
 	"require-dev": {
-		"nette/tester": "@dev",
 		"kdyby/events": "@dev",
-		"kdyby/console": "@dev"
+		"kdyby/console": "@dev",
+		"nette/tester": "@dev",
+		"jakub-onderka/php-parallel-lint": "~0.6"
 	},
 	"autoload": {
 		"psr-0": {
