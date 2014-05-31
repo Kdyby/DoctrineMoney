@@ -3,7 +3,7 @@ Kdyby/DoctrineMoney
 
 [![Build Status](https://travis-ci.org/Kdyby/DoctrineMoney.svg?branch=master)](https://travis-ci.org/Kdyby/DoctrineMoney)
 [![Downloads this Month](https://img.shields.io/packagist/dm/Kdyby/DoctrineMoney.svg)](https://packagist.org/packages/Kdyby/DoctrineMoney)
-[![Latest stable](img.shields.io/packagist/v/Kdyby/DoctrineMoney.svg)](https://packagist.org/packages/Kdyby/DoctrineMoney)
+[![Latest stable](https://img.shields.io/packagist/v/Kdyby/DoctrineMoney.svg)](https://packagist.org/packages/Kdyby/DoctrineMoney)
 
 
 Requirements
