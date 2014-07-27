@@ -29,8 +29,9 @@
 	},
 	"require-dev": {
 		"kdyby/annotations": "2.0.*@dev",
-		"kdyby/events": "~2.1@dev",
-		"kdyby/console": "~2.2@dev",
+		"kdyby/events": "2.1.*@dev",
+		"kdyby/console": "2.2.*@dev",
+		"kdyby/doctrine-cache": "2.2.*@dev",
 		"nette/tester": "@dev",
 		"jakub-onderka/php-parallel-lint": "~0.7"
 	},
