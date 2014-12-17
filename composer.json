@@ -23,7 +23,7 @@
 	"require": {
 		"nette/nette": "~2.1@dev",
 
-		"kdyby/doctrine": "~2.0@dev",
+		"kdyby/doctrine": "~2.1@dev",
 		"kdyby/money": "@dev",
 		"symfony/yaml": "~2.4"
 	},
