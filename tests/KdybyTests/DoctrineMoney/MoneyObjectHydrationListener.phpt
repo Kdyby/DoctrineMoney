@@ -16,7 +16,6 @@ use Kdyby\Money\Currency;
 use Kdyby\Money\Money;
 use Kdyby\Money\NullCurrency;
 use Kdyby;
-use Kdyby\Doctrine\Events;
 use Doctrine\ORM\Events as ORMEvents;
 use KdybyTests\IntegrationTestCase;
 use Nette;
@@ -73,7 +72,7 @@ class MoneyObjectHydrationListenerTest extends IntegrationTestCase
 
 		// assert that listener was binded to entity
 		Assert::same(array(
-			Events::postLoadRelations => array(array('class' => 'Kdyby\\DoctrineMoney\\Mapping\\MoneyObjectHydrationListener', 'method' => Events::postLoadRelations)),
+			ORMEvents::postLoad => array(array('class' => 'Kdyby\\DoctrineMoney\\Mapping\\MoneyObjectHydrationListener', 'method' => 'postLoad')),
 			ORMEvents::preFlush => array(array('class' => 'Kdyby\\DoctrineMoney\\Mapping\\MoneyObjectHydrationListener', 'method' => ORMEvents::preFlush)),
 		), $class->entityListeners);
 
@@ -105,7 +104,7 @@ class MoneyObjectHydrationListenerTest extends IntegrationTestCase
 	 */
 	public function testNullCurrencyHydration($expectedMoney, OrderEntity $entity)
 	{
-		$this->listener->postLoadRelations($entity, new LifecycleEventArgs($entity, $this->em));
+		$this->listener->postLoad($entity, new LifecycleEventArgs($entity, $this->em));
 		Assert::equal($expectedMoney, $entity->getMoney());
 	}
 

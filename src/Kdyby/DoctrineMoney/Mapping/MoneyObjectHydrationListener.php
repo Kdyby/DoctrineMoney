@@ -76,7 +76,7 @@ class MoneyObjectHydrationListener extends Nette\Object implements Kdyby\Events\
 
 
 
-	public function postLoadRelations($entity, LifecycleEventArgs $args)
+	public function postLoad($entity, LifecycleEventArgs $args)
 	{
 		if (!$fieldsMap = $this->getEntityMoneyFields($entity)) {
 			return;
@@ -197,8 +197,8 @@ class MoneyObjectHydrationListener extends Nette\Object implements Kdyby\Events\
 			return;
 		}
 
-		if (!$this->hasRegisteredListener($class, Kdyby\Doctrine\Events::postLoadRelations, get_called_class())) {
-			$class->addEntityListener(Kdyby\Doctrine\Events::postLoadRelations, get_called_class(), Kdyby\Doctrine\Events::postLoadRelations);
+		if (!$this->hasRegisteredListener($class, Events::postLoad, get_called_class())) {
+			$class->addEntityListener(Events::postLoad, get_called_class(), 'postLoad');
 		}
 
 		if (!$this->hasRegisteredListener($class, Events::preFlush, get_called_class())) {
