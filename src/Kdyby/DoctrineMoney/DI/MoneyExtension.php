@@ -45,7 +45,7 @@ class MoneyExtension extends Nette\DI\CompilerExtension implements Kdyby\Doctrin
 			->setClass('Kdyby\DoctrineMoney\Mapping\MoneyObjectHydrationListener', array(
 				Kdyby\DoctrineCache\DI\Helpers::processCache($this, $config['cache'], 'money'),
 			))
-			->addTag(EventsExtension::SUBSCRIBER_TAG);
+			->addTag(EventsExtension::TAG_SUBSCRIBER);
 
 		// @deprecated
 		$builder->addDefinition($this->prefix('rates'))
