@@ -31,7 +31,9 @@ class ExtensionTest extends \KdybyTests\IntegrationTestCase
 	public function testRegisterTypes()
 	{
 		$container = $this->createContainer();
-		$container->getByType('Kdyby\Doctrine\Connection'); // initializes the types
+		/** @var \Kdyby\Doctrine\Connection $connection */
+		$connection = $container->getByType('Kdyby\Doctrine\Connection');
+		$connection->connect(); // initializes the types
 
 		Assert::true(Type::getType('money') instanceof Kdyby\DoctrineMoney\Types\Money);
 	}
