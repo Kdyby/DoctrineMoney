@@ -28,7 +28,6 @@ class MoneyExtension extends Nette\DI\CompilerExtension implements Kdyby\Doctrin
 	 */
 	public $defaults = array(
 		'cache' => 'default',
-
 		'currencies' => array(),
 		'rates' => array(
 			'static' => array(),
