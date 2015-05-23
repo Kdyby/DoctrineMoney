@@ -16,9 +16,10 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Event\PreFlushEventArgs;
-use Doctrine\ORM\Events;
+use Doctrine\ORM\Events as ORMEvents;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Kdyby;
+use Kdyby\Doctrine\Events;
 use Kdyby\DoctrineMoney\CurrenciesConflictException;
 use Kdyby\Money\Currency;
 use Kdyby\Money\MetadataException;
@@ -197,12 +198,12 @@ class MoneyObjectHydrationListener extends Nette\Object implements Kdyby\Events\
 			return;
 		}
 
-		if (!$this->hasRegisteredListener($class, Events::postLoad, get_called_class())) {
-			$class->addEntityListener(Events::postLoad, get_called_class(), 'postLoad');
+		if (!$this->hasRegisteredListener($class, ORMEvents::postLoad, get_called_class())) {
+			$class->addEntityListener(ORMEvents::postLoad, get_called_class(), ORMEvents::postLoad);
 		}
 
-		if (!$this->hasRegisteredListener($class, Events::preFlush, get_called_class())) {
-			$class->addEntityListener(Events::preFlush, get_called_class(), Events::preFlush);
+		if (!$this->hasRegisteredListener($class, ORMEvents::preFlush, get_called_class())) {
+			$class->addEntityListener(ORMEvents::preFlush, get_called_class(), ORMEvents::preFlush);
 		}
 	}
 
