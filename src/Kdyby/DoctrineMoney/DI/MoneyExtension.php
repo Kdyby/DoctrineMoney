@@ -112,4 +112,3 @@ class MoneyExtension extends Nette\DI\CompilerExtension implements Kdyby\Doctrin
 	}
 
 }
-
