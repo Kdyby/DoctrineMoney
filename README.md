@@ -4,6 +4,7 @@ Kdyby/DoctrineMoney
 [![Build Status](https://travis-ci.org/Kdyby/DoctrineMoney.svg?branch=master)](https://travis-ci.org/Kdyby/DoctrineMoney)
 [![Downloads this Month](https://img.shields.io/packagist/dm/kdyby/doctrine-money.svg)](https://packagist.org/packages/kdyby/doctrine-money)
 [![Latest stable](https://img.shields.io/packagist/v/kdyby/doctrine-money.svg)](https://packagist.org/packages/kdyby/doctrine-money)
+[![Join the chat at https://gitter.im/Kdyby/Help](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Kdyby/Help)
 
 
 Requirements
